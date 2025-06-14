@@ -10,7 +10,7 @@ def get_page_html(form_data):
     <body>
         <h1>Data shown for selected date and climate metric </h1>
     """
-    sql_query = "select * from aat;"
+    sql_query = "select * from location;"
     page_html+= f"<h2>Result from \"{sql_query}\"</h2>"
     
     #Run the query in sql_query and get the results
