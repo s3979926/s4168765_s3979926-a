@@ -8,13 +8,13 @@ def get_page_html(form_data):
         <title>Reading from a .db file</title>
     </head>
     <body>
-        <h1>Page 2B - Example of retrieving data from a .db file...</h1>
+        <h1>Data shown for selected date and climate metric </h1>
     """
-    sql_query = "select * from movie;"
+    sql_query = "select * from aat;"
     page_html+= f"<h2>Result from \"{sql_query}\"</h2>"
     
     #Run the query in sql_query and get the results
-    results = pyhtml.get_results_from_query("database/movies.db",sql_query)
+    results = pyhtml.get_results_from_query("database/bom2.db",sql_query)
     
     #Adding results to the web page without any beautification. Try turning it into a nice table!
     for row in results:
