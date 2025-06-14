@@ -6,7 +6,7 @@ def get_page_html(form_data):
     sql_query = """
     SELECT DMY, Location, MaxTemp, MinTemp
     FROM AET
-    WHERE MinTemp = (SELECT MIN(MinTemp) FROM AET);
+    WHERE MinTemp = MIN(MinTemp);
     """
     results = pyhtml.get_results_from_query("database/BOM2.db",sql_query)
 
