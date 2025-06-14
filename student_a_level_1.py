@@ -6,8 +6,8 @@ def get_page_html(form_data):
     sql_query = """
     SELECT DMY, Location, MaxTemp, MinTemp
     FROM AET
-    WHERE minTemperature = (
-        SELECT MIN(minTemperature)
+    WHERE MinTemp = (
+        SELECT MIN(MinTemp)
         FROM AET
     );
     """
