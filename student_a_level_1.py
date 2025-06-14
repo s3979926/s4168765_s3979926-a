@@ -9,6 +9,8 @@ def get_page_html(form_data):
     WHERE MinTemp = (
         SELECT MIN(MinTemp)
         FROM AET
+        WHERE MinTemp IS NOT NULL)
+    AND MinTemp IS NOT NULL    
     );
     """
     results = pyhtml.get_results_from_query("database/BOM2.db",sql_query)
