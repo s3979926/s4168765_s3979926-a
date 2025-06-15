@@ -54,8 +54,7 @@ def get_page_html(form_data):
             location_query = f"""
             SELECT Site, Name, Region, Lat
             FROM Location
-            WHERE TRIM(UPPER(State)) = 'QLD' 
-            AND CAST(Lat AS REAL) BETWEEN -21 AND -15
+            WHERE TRIM(State) LIKE '{safe_state}' AND CAST(Lat AS REAL) BETWEEN {lat_min_val} AND {lat_max_val}
             ORDER BY CAST(Lat AS REAL) ASC;
             """
 
@@ -77,10 +76,6 @@ def get_page_html(form_data):
             page_html += "<p style='color:red;'>Please enter valid numeric latitude values.</p>"
 
     page_html += """
-    </body>
-    </html>
-    """
-    page_html += """
         <p><a href="/">Go to Page 1A</a></p>
         <p><a href="/page2a">Go to Page 2A</a></p>
         <p><a href="/page3a">Go to Page 3A</a></p>
@@ -92,4 +87,5 @@ def get_page_html(form_data):
     </body>
     </html>
     """
+
     return page_html
