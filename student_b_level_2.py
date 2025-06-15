@@ -52,17 +52,17 @@ def get_page_html(form_data):
 
             query = f"""
             SELECT Location, DMY, {selected_metric}
-            FROM Statesdata
+            FROM States_combined
             WHERE CAST(Location AS REAL) BETWEEN {loc_min_val} AND {loc_max_val}
             ORDER BY CAST(Location AS REAL), DMY;
             """
 
             print("Running query:", query)
-            results = pyhtml.get_results_from_query("database/States combined.db", query)
+            results = pyhtml.get_results_from_query("database/Stations_combined.db", query)
             print("Results fetched:", results)
 
             page_html += f"""
-            <h3>Results for {selected_metric} between Location IDs {loc_min_val} and {loc_max_val}</h3>
+            <h3>Results for {selected_metric} between Location ID {loc_min_val} and {loc_max_val}</h3>
             <table border="1" style="border-collapse: collapse;">
                 <tr><th>Location</th><th>Date</th><th>{selected_metric}</th></tr>
             """
