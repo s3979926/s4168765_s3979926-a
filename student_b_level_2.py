@@ -26,8 +26,7 @@ def get_page_html(form_data):
             <select name="field">
     """
 
-    # Only allow valid metrics
-    metric_columns = ['RainDaysNum', 'MaxTemp', 'MinTemp']  # Add more as needed
+    metric_columns = ['RainDaysNum', 'MaxTemp', 'MinTemp','Precipitation','PrecipQual','Evaporation','EvapQual']
     for metric in metric_columns:
         selected = ' selected' if selected_metric == metric else ''
         page_html += f'<option value="{metric}"{selected}>{metric}</option>\n'
@@ -42,30 +41,26 @@ def get_page_html(form_data):
         </form>
     """
 
-    # Query & display results
     if selected_metric and location_min and location_max:
         try:
             loc_min_val = float(location_min)
             loc_max_val = float(location_max)
             loc_min_val, loc_max_val = min(loc_min_val, loc_max_val), max(loc_min_val, loc_max_val)
 
-            # Validate the metric
             if selected_metric not in metric_columns:
                 raise ValueError("Invalid metric selected.")
 
-            # SQL Query
             query = f"""
             SELECT Location, DMY, {selected_metric}
-            FROM AET
+            FROM Statesdata
             WHERE CAST(Location AS REAL) BETWEEN {loc_min_val} AND {loc_max_val}
             ORDER BY CAST(Location AS REAL), DMY;
             """
 
             print("Running query:", query)
-            results = pyhtml.get_results_from_query("database/BOM2.db", query)
+            results = pyhtml.get_results_from_query("database/States combined.db", query)
             print("Results fetched:", results)
 
-            # HTML Table
             page_html += f"""
             <h3>Results for {selected_metric} between Location IDs {loc_min_val} and {loc_max_val}</h3>
             <table border="1" style="border-collapse: collapse;">
@@ -81,7 +76,6 @@ def get_page_html(form_data):
             print("Error:", ve)
             page_html += "<p style='color:red;'>Invalid input or metric. Please enter numeric location IDs.</p>"
 
-    # Navigation and footer
     page_html += """<p><a href="/">Go to Page 1A</a></p>
         <p><a href="/page2a">Go to Page 2A</a></p>
         <p><a href="/page3a">Go to Page 3A</a></p>
