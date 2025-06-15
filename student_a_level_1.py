@@ -30,6 +30,24 @@ def get_page_html(form_data):
             page_html += f"""  
         <p style="text-align: center;">{row}</p>"""
     
+    # data range
+    page_html += """<body>
+        <h3 style= "text-align: center;">Our data range for both station AAT and AET</h3>
+    """
+    sql_query3 = """SELECT MIN(DMY) AS oldest_date, MAX(DMY) AS newest_date
+    FROM (
+    SELECT DMY FROM AAT WHERE DMY IS NOT NULL
+    UNION ALL
+    SELECT DMY FROM AET WHERE DMY IS NOT NULL
+    );
+    """
+
+    results3 = pyhtml.get_results_from_query("database/BOM2.db",sql_query3)
+    if results3:
+        for row in results3:
+            page_html += f"""  
+        <p style="text-align: center;">{row}</p>"""
+
     # Top 3 day with max temp in AAT
     page_html += """
     <body>
