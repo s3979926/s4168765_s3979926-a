@@ -1,17 +1,35 @@
 import pyhtml
+
 def get_page_html(form_data):
     print("About to return page home page...")
-    page_html="""<!DOCTYPE html>
+    page_html = """<!DOCTYPE html>
     <html lang="en">
     <head>
         <title>Database Web-App Demo</title>
+        <style>
+            table {
+                margin: auto;
+                border-collapse: collapse;
+                width: 60%;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            h3, p {
+                text-align: center;
+            }
+        </style>
     </head>
     <body>
         <h1 style="text-align: center;">Weather Website</h1>
-        <p style= "text-align: center;">Our website aim to help user know more about their weather and to have better choice</p>
+        <p style="text-align: center;">Our website aim to help user know more about their weather and to have better choice</p>
         <h3 style="text-align: center;">Top 3 region with the most site</h3>
     """
-
 
     # sql for region with the most site
     sql_query = """
@@ -20,19 +38,18 @@ def get_page_html(form_data):
     GROUP BY Region
     ORDER BY site_count DESC
     LIMIT 3;
- 
     """
-    results = pyhtml.get_results_from_query("database/BOM2.db",sql_query)
-
-
+    results = pyhtml.get_results_from_query("database/BOM2.db", sql_query)
     if results:
+        page_html += """<table>
+            <tr><th>Region</th><th>Site Count</th></tr>"""
         for row in results:
-            page_html += f"""  
-        <p style="text-align: center;">{row}</p>"""
-    
+            page_html += f"<tr><td>{row[0]}</td><td>{row[1]}</td></tr>"
+        page_html += "</table>"
+
     # data range
     page_html += """<body>
-        <h3 style= "text-align: center;">Our data range for both station AAT and AET</h3>
+        <h3 style="text-align: center;">Our data range for both station AAT and AET</h3>
     """
     sql_query3 = """SELECT MIN(DMY) AS oldest_date, MAX(DMY) AS newest_date
     FROM (
@@ -41,55 +58,53 @@ def get_page_html(form_data):
     SELECT DMY FROM AET WHERE DMY IS NOT NULL
     );
     """
-
-    results3 = pyhtml.get_results_from_query("database/BOM2.db",sql_query3)
+    results3 = pyhtml.get_results_from_query("database/BOM2.db", sql_query3)
     if results3:
+        page_html += """<table>
+            <tr><th>Oldest Date</th><th>Newest Date</th></tr>"""
         for row in results3:
-            page_html += f"""  
-        <p style="text-align: center;">{row}</p>"""
+            page_html += f"<tr><td>{row[0]}</td><td>{row[1]}</td></tr>"
+        page_html += "</table>"
 
     # Top 3 day with max temp in AAT
     page_html += """
     <body>
         <h3 style="text-align: center;">Top 3 day with the highest temperature in AAT</h3>
-        <p style= "text-align: center;">Read by (Site, Date, Min Temperature, Max Temperature</p>
+        <p style="text-align: center;">Read by (Site, Date, Min Temperature, Max Temperature)</p>
     """
-            
     sql_query1 = """SELECT Location, DMY, MinTemp, MaxTemp
     FROM AAT
     WHERE MaxTemp IS NOT NULL
     ORDER BY MaxTemp * 1.0 DESC
     LIMIT 3;
-        """
-    results1 = pyhtml.get_results_from_query("database/BOM2.db",sql_query1)
+    """
+    results1 = pyhtml.get_results_from_query("database/BOM2.db", sql_query1)
     if results1:
+        page_html += """<table>
+            <tr><th>Location</th><th>Date</th><th>Min Temp</th><th>Max Temp</th></tr>"""
         for row in results1:
-            page_html += f"""  
-        <p style="text-align: center;">{row}</p>"""
-            
-            
+            page_html += f"<tr><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td></tr>"
+        page_html += "</table>"
+
     # Top 3 day with max temp in AET
     page_html += """ 
     <body>
         <h3 style="text-align: center;">Top 3 day with the highest temperature in AET</h3>
-        <p style= "text-align: center;">Read by (Site, Date, Min Temperature, Max Temperature</p>
+        <p style="text-align: center;">Read by (Site, Date, Min Temperature, Max Temperature)</p>
     """
-            
     sql_query2 = """SELECT Location, DMY, MinTemp, MaxTemp
     FROM AET
     WHERE MaxTemp IS NOT NULL
     ORDER BY MaxTemp * 1.0 DESC
     LIMIT 3;
-        """
-    results2 = pyhtml.get_results_from_query("database/BOM2.db",sql_query2)
+    """
+    results2 = pyhtml.get_results_from_query("database/BOM2.db", sql_query2)
     if results2:
+        page_html += """<table>
+            <tr><th>Location</th><th>Date</th><th>Min Temp</th><th>Max Temp</th></tr>"""
         for row in results2:
-            page_html += f"""  
-        <p style="text-align: center;">{row}</p>"""
-
-
-
-            
+            page_html += f"<tr><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td></tr>"
+        page_html += "</table>"
 
     page_html += """
         <p><a href="/">Go to Page 1A</a></p>
@@ -98,7 +113,7 @@ def get_page_html(form_data):
         <p><a href="/page1b">Go to Page 1B</a></p>
         <p><a href="/page2b">Go to Page 2B</a></p>
         <p><a href="/page3b">Go to Page 3B</a></p>
-        <p style="text-align: center;">Data covered our website</p>
+        <p style="text-align: center;">A snapshot of the data covered by our website</p>
         <img src="images/data snapshot.png" style="width: 30%; height: auto; display: block; margin: 0 auto;">
     </body>
     </html>
