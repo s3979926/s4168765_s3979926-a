@@ -37,6 +37,12 @@ def get_page_html(form_data):
         <button onclick="toggleImage('personaB')">Show/Hide Persona B</button><br>
         <img id="personaB" src="images/Persona_B" alt="Persona B" style="width:40%; height:auto; display:none;"><br>
 
+
+        <h3>Our members</h3>
+        <button onclick="toggleImage('Members')">Show/Hide Members info </button><br>
+        <img id="Members" src="images/members_detail" alt="Members" style="width:40%; height:auto; display:none;"><br><br>
+
+
         <p><a href="/">Go to Page 1A</a></p>
         <p><a href="/page2a">Go to Page 2A</a></p>
         <p><a href="/page3a">Go to Page 3A</a></p>
