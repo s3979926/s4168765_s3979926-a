@@ -1,5 +1,6 @@
 import pyhtml
 
+#Processing the time period section
 def convert_dmy_to_tuple(dmy):
     try:
         day, month, year = map(int, dmy.split("/"))
@@ -42,11 +43,11 @@ def get_page_html(form_data):
             <label>Select end year (max = 2020):</label>
             <input type="number" name="end_year" value="{end_year or ''}" min="1970" max="2020"><br><br>
             <label for="num_metrics">Number of similar metrics to compare:</label>
-            <input type="number" name="num_metrics" value="{num_metrics or '3'}"><br><br>
+            <input type="number" name="num_metrics" value="{num_metrics or '1'}"><br><br> # set number of metric by 1 as default
             <input type="submit" value="Find similar metrics">
         </form>
     """
-# Filtering time period
+# Filtering time period and metrics similar to the referenced one
     if ref_metric and start_year and end_year and num_metrics:
         try:
             start_year = int(start_year)
@@ -80,7 +81,7 @@ def get_page_html(form_data):
                             except:
                                 continue
 
-# Defining dunction to calculate average value of each metrics
+# Defining dunction to calculate average value of each similar metrics
             def avg(vals, start, end):
                 data = [v for d, v in vals if start <= d <= end]
                 return sum(data) / len(data) if data else None
@@ -106,7 +107,7 @@ def get_page_html(form_data):
                 metric_diffs.sort(key=lambda x: x[4])
                 top_similar = metric_diffs[:num_metrics]
 
-                # Show reference metric at the top
+                # Show reference metric at the top row of the result table
                 page_html += f"""
                 <h3>Most similar metrics (Compared to {ref_metric} from {start_year} to {end_year})</h3>
                 <p>Split into two periods: ({start_year}-{mid_year}) and ({mid_year + 1}-{end_year})</p>

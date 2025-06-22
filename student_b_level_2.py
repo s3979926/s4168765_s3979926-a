@@ -1,5 +1,6 @@
 import pyhtml
 
+# processing the time period section
 def convert_dmy_to_tuple(dmy):
     try:
         day, month, year = map(int, dmy.split("/"))
@@ -99,7 +100,7 @@ def get_page_html(form_data):
             ]
 
 
-#Creating tabs, showing filtered data from 40 unique cells for each tab
+# Working with the pagination navigation, divide large dataset filtered into small chunks, each chunk shows 40 different cells from the SQL, filtered.
             per_page = 40
             total_results = len(filtered_results)
             total_pages = (total_results + per_page - 1) // per_page
@@ -125,7 +126,7 @@ def get_page_html(form_data):
 
 
                 base_url = f"/page2b?field={selected_metric}&location_min={loc_min_val}&location_max={loc_max_val}&start_year={start_year}&end_year={end_year}"
-#Adding ordered tabs to organise the page
+#Adding ordered pages for the pagination to organise the page
                 max_visible_pages = 10
                 start_page = max(1, page - max_visible_pages // 2)
                 end_page = min(total_pages, start_page + max_visible_pages - 1)

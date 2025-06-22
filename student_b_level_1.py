@@ -15,8 +15,11 @@ def get_page_html(form_data):
 
 
         <h3>How the site can be use? </h3>
-        <p>Our website gives users free access to a diversity range of climate data through our filtering models that spread across both A and B sections of page 1 and 2.</p>
-        <p>User can use our resources for basic weather check, eduction or even insightful researches. The usage possibilities of the website is diverse for the user to work with, fulfill their needs and goals. </p>
+        <p>Our website gives users free access to a diversity range of climate data through our filtering models that spread across both A and B sections of page 1 and 2. Specifically, level 2 allows user to view data 
+        from different stations by filtering unique metrics, location, ids or dates. On the other hand, level 3 focus on finding similar stations, metrics that have similar rate of change through a period of time, compare to the
+          reference metric/state.  </p>
+        <p>User can use our resources for basic tasks like weather check, eduction or even insightful researches. The usage possibilities of the website is diverse for the user to work with, fulfill their needs and goals. </p>
+
 
     <head>
         <script>
