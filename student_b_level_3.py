@@ -1,92 +1,139 @@
 import pyhtml
+
+def convert_dmy_to_tuple(dmy):
+    try:
+        day, month, year = map(int, dmy.split("/"))
+        return year, month, day
+    except:
+        return None
+
 def get_page_html(form_data):
-    print("About to return page 3")
-    #Create the top part of the webpage
-    #Note that the drop down list ('select' HTML element) has been given the name "var_star"
-    #We will use this same name in our code further below to obtain what the user selected.
-    page_html="""<!DOCTYPE html>
+    ref_metric = form_data.get('ref_metric')
+    start_year = form_data.get('start_year')
+    end_year = form_data.get('end_year')
+    num_metrics = form_data.get('num_metrics')
+
+    if isinstance(ref_metric, list): ref_metric = ref_metric[0]
+    if isinstance(start_year, list): start_year = start_year[0]
+    if isinstance(end_year, list): end_year = end_year[0]
+    if isinstance(num_metrics, list): num_metrics = num_metrics[0]
+
+    page_html = """<!DOCTYPE html>
     <html lang="en">
     <head>
-        <title>Page 3B - Forms, databases and advanced queries</title>
+        <title>Task 3B - Similar Metrics by Trend</title>
     </head>
     <body>
-        <h1>Welcome to Page 3B!</h1>
-        <p>List the movies based on the star</p>
+        <h1>Find metrics with similar change to the reference metric</h1>
         <form action="/page3b" method="GET">
-        
-          <label for="var_star">Movie Star</label>
-          <select name="var_star" multiple>"""
-    #Before you read further, play around with the web-page and note how selecting a star name from the first
-    #drop down list populates the second drop down list with the movies in which they have featured.
-    
-    #Note that although we see the name of the movie star in the first drop down list, when a star is selected and submitted,
-    #our program receives the star's ID (primary key).
-    
-    ################################ Movie star drop down list is generated below ######################################
-          
+            <label for="ref_metric">Select reference metric:</label>
+            <select name="ref_metric">
+    """
 
-    #Put the query together.
-    query = "select * from star;"
+    metric_columns = ['RainDaysNum', 'MaxTemp', 'MinTemp', 'Precipitation', 'PrecipQual', 'Evaporation', 'EvapQual']
+    for m in metric_columns:
+        selected = 'selected' if ref_metric == m else ''
+        page_html += f'<option value="{m}" {selected}>{m}</option>'
     
-    #Run the query on the movies.db in the 'database' folder and get the results
-    #Note that all results are in the str data type first, even if they had different types in the database.
-    results = pyhtml.get_results_from_query("database/movies.db",query)
-    
-    #Get the value or values in the HTML dropdown list that we named "var_star" or None no data was sent through.
-    #If the user selects multiple movie stars on the web_page, we will have multiple values.
-    var_star = form_data.get('var_star')
-    
-    print("var_star selected on webpage is: ",var_star)
-    
-    #If the user had selected one or more stars on the web-page, convert their IDs to int
-    if(var_star!=None):
-        #Take the list of strings and convert the items to ints
-        var_star = [int(star) for star in var_star]
-    
-    #Create the drop down list of movie stars
-    for row in results:
-        #row[0] is the ID/primary key of the movie stars
-        page_html+='<option value="'+str(row[0])+'"'
-        #If there was a previous selection of a star on the web page, have them selected by default to be user-friendly.
-        if var_star!=None and row[0]==var_star[0]:
-            page_html+=' selected="selected"'
-            
-        #row[1] is the name of the star, which is what the user sees in the drop down list.
-        page_html+='>'+str(row[1])+'</option>'
-        
-    page_html+="</select><br><br>"
+    page_html += f"""
+            </select><br><br>
+            <label>Select start year (min =1970):</label>
+            <input type="number" name="start_year" value="{start_year or ''}" min="1970" max="2020"><br><br>
+            <label>Select end year (max = 2020):</label>
+            <input type="number" name="end_year" value="{end_year or ''}" min="1970" max="2020"><br><br>
+            <label for="num_metrics">Number of similar metrics to compare:</label>
+            <input type="number" name="num_metrics" value="{num_metrics or '3'}"><br><br>
+            <input type="submit" value="Find similar metrics">
+        </form>
+    """
 
+    if ref_metric and start_year and end_year and num_metrics:
+        try:
+            start_year = int(start_year)
+            end_year = int(end_year)
+            mid_year = (start_year + end_year) // 2
+            num_metrics = int(num_metrics)
 
+            start1 = (start_year, 1, 1)
+            end1 = (mid_year, 12, 31)
+            start2 = (mid_year + 1, 1, 1)
+            end2 = (end_year, 12, 31)
 
-    ################################ Movies drop down list is generated below ##########################################
-    
-    page_html+="""<label for="var_movie">Movie</label>
-    <select name="var_movie" """
+            query = f"""
+                SELECT Location, DMY, {', '.join(metric_columns)}
+                FROM States_combined
+                WHERE DMY IS NOT NULL
+            """
+            results = pyhtml.get_results_from_query("database/Stations_combined.db", query)
 
-    #We create this drop down list only if a movie star was chosen
-    if var_star!=None:
-        #Query for getting the list of movie IDs and their titles by star
-        query ="""SELECT movie.mvnumb, movie.mvtitle 
-        FROM movie 
-        JOIN movstar ON movie.mvnumb = movstar.mvnumb """
-        query+=f"WHERE movstar.starnumb = {var_star[0]};"
+            metric_data = {metric: [] for metric in metric_columns}
+            for row in results:
+                _, dmy, *values = row
+                date = convert_dmy_to_tuple(dmy)
+                if date:
+                    for i, metric in enumerate(metric_columns):
+                        val = values[i]
+                        if val is not None:
+                            try:
+                                val = float(val)
+                                metric_data[metric].append((date, val))
+                            except:
+                                continue
 
-        #Run query and get results
-        results = pyhtml.get_results_from_query("database/movies.db",query)
-        page_html+=" >"
-        #row[0] is the movie ID (primary key) and row[1] is the movie title
-        for row in results:
-            page_html+='<option value="'+str(row[0])+'"\>'+str(row[1])+'</option>'
-    else:
-        #If no movie star was chosen, we create a dummy list and make it disabled so the user sees the movie drop down
-        #but they can't access it.
-        page_html+="disabled>"
-        page_html+='<option>Choose a star</option>'
-    page_html+="</select><br><br>"
+            def avg(vals, start, end):
+                data = [v for d, v in vals if start <= d <= end]
+                return sum(data) / len(data) if data else None
 
-    page_html+="""
-    <input type="submit" value="Show starred movies">
-    </form>
+            ref_vals = metric_data.get(ref_metric, [])
+            ref_avg1 = avg(ref_vals, start1, end1)
+            ref_avg2 = avg(ref_vals, start2, end2)
+
+            if ref_avg1 is not None and ref_avg2 is not None and ref_avg1 != 0:
+                ref_change = (ref_avg2 - ref_avg1) / ref_avg1 * 100
+                metric_diffs = []
+
+                for metric, values in metric_data.items():
+                    if metric == ref_metric:
+                        continue
+                    avg1 = avg(values, start1, end1)
+                    avg2 = avg(values, start2, end2)
+                    if avg1 is not None and avg2 is not None and avg1 != 0:
+                        change = (avg2 - avg1) / avg1 * 100
+                        diff = abs(change - ref_change)
+                        metric_diffs.append((metric, round(avg1, 2), round(avg2, 2), round(change, 2), round(diff, 2)))
+
+                metric_diffs.sort(key=lambda x: x[4])
+                top_similar = metric_diffs[:num_metrics]
+
+                # Show reference metric at the top
+                page_html += f"""
+                <h3>Most similar metrics (Compared to {ref_metric} from {start_year} to {end_year})</h3>
+                <p>Split into two periods: ({start_year}-{mid_year}) and ({mid_year + 1}-{end_year})</p>
+                <table border="1" style="border-collapse: collapse;">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Avg in Period 1</th>
+                        <th>Avg in Period 2</th>
+                        <th>% Change</th>
+                        <th>Difference from {ref_metric} (%)</th>
+                    </tr>
+                        <td>{ref_metric}</td>
+                        <td>{round(ref_avg1, 2)}</td>
+                        <td>{round(ref_avg2, 2)}</td>
+                        <td>{round(ref_change, 2)}</td>
+                        <td>0.00 (selected)</td>
+                    </tr>
+                """
+                for row in top_similar:
+                    page_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+                page_html += "</table>"
+            else:
+                page_html += "<p style='color:red;'>Reference metric lacks valid data for both periods.</p>"
+
+        except Exception as e:
+            page_html += f"<p style='color:red;'>Error: {str(e)}</p>"
+
+    page_html += """
         <p><a href="/">Go to Page 1A</a></p>
         <p><a href="/page2a">Go to Page 2A</a></p>
         <p><a href="/page3a">Go to Page 3A</a></p>
@@ -96,4 +143,5 @@ def get_page_html(form_data):
     </body>
     </html>
     """
+
     return page_html
