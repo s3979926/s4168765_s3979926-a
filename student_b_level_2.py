@@ -85,14 +85,18 @@ def get_page_html(form_data):
             SELECT Location, DMY, {selected_metric}
             FROM States_combined
             WHERE CAST(Location AS REAL) BETWEEN {loc_min_val} AND {loc_max_val}
-            ORDER BY CAST(Location AS REAL), {', '.join(metric_columns)}
-                FROM States_combined
-                WHERE DMY IS NOT NULL
+            AND DMY IS NOT NULL
+            ORDER BY CAST(Location AS REAL), DMY;
             """
 
 
             results = pyhtml.get_results_from_query("database/Stations_combined.db", query)
             filtered_results = [row for row in results if row[2] is not None and str(row[2]).strip() != '']
+
+            filtered_results = [
+            row for row in filtered_results
+            if convert_dmy_to_tuple(row[1]) and start_year <= convert_dmy_to_tuple(row[1])[0] <= end_year
+            ]
 
 
 #Creating tabs, showing filtered data from 40 unique cells for each tab
@@ -120,7 +124,7 @@ def get_page_html(form_data):
                 page_html += "<div style='margin-top:10px;'>"
 
 
-                base_url = f"/page2b?field={selected_metric}&location_min={loc_min_val}&location_max={loc_max_val}"
+                base_url = f"/page2b?field={selected_metric}&location_min={loc_min_val}&location_max={loc_max_val}&start_year={start_year}&end_year={end_year}"
 #Adding ordered tabs to organise the page
                 max_visible_pages = 10
                 start_page = max(1, page - max_visible_pages // 2)

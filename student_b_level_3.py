@@ -46,7 +46,7 @@ def get_page_html(form_data):
             <input type="submit" value="Find similar metrics">
         </form>
     """
-
+# Filtering time period
     if ref_metric and start_year and end_year and num_metrics:
         try:
             start_year = int(start_year)
@@ -113,8 +113,8 @@ def get_page_html(form_data):
                 <table border="1" style="border-collapse: collapse;">
                     <tr>
                         <th>Metric</th>
-                        <th>Avg in Period 1</th>
-                        <th>Avg in Period 2</th>
+                        <th>Avg value in Period 1</th>
+                        <th>Avg value in Period 2</th>
                         <th>% Change</th>
                         <th>Difference from {ref_metric} (%)</th>
                     </tr>
