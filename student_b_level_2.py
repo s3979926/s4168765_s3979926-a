@@ -146,8 +146,6 @@ def get_page_html(form_data):
         <p><a href="/page1b">Go to Page 1B</a></p>
         <p><a href="/page2b">Go to Page 2B</a></p>
         <p><a href="/page3b">Go to Page 3B</a></p>
-        <p style="text-align: center;">Data covered our website</p>
-        <img src="images/data snapshot.png" style="width: 30%; height: auto; display: block; margin: 0 auto;">
     </body>
     </html>
     """

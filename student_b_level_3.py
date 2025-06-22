@@ -80,6 +80,7 @@ def get_page_html(form_data):
                             except:
                                 continue
 
+# Defining dunction to calculate average value of each metrics
             def avg(vals, start, end):
                 data = [v for d, v in vals if start <= d <= end]
                 return sum(data) / len(data) if data else None
