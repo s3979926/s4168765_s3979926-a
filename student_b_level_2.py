@@ -54,7 +54,7 @@ def get_page_html(form_data):
         selected = ' selected' if selected_metric == metric else ''
         page_html += f'<option value="{metric}"{selected}>{metric}</option>\n'
 
-
+#Processing filtering aspects
     page_html += f"""
             </select><br><br>
             <label for="location_min">Min Location ID:</label>
@@ -68,7 +68,7 @@ def get_page_html(form_data):
             <input type="submit" value="Filter Locations">
         </form>
     """
-
+#Filtering time period, loaction id
     if selected_metric and location_min and location_max and start_year and end_year:
         try:
             loc_min_val = float(location_min)

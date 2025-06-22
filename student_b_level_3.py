@@ -36,6 +36,7 @@ def get_page_html(form_data):
         selected = 'selected' if ref_metric == m else ''
         page_html += f'<option value="{m}" {selected}>{m}</option>'
     
+# Processing filtering aspects, set number of similar metric shown by 1 as default
     page_html += f"""
             </select><br><br>
             <label>Select start year (min =1970):</label>
@@ -43,7 +44,7 @@ def get_page_html(form_data):
             <label>Select end year (max = 2020):</label>
             <input type="number" name="end_year" value="{end_year or ''}" min="1970" max="2020"><br><br>
             <label for="num_metrics">Number of similar metrics to compare:</label>
-            <input type="number" name="num_metrics" value="{num_metrics or '1'}"><br><br> # set number of metric by 1 as default
+            <input type="number" name="num_metrics" value="{num_metrics or '1'}"><br><br>
             <input type="submit" value="Find similar metrics">
         </form>
     """
@@ -107,7 +108,7 @@ def get_page_html(form_data):
                 metric_diffs.sort(key=lambda x: x[4])
                 top_similar = metric_diffs[:num_metrics]
 
-                # Show reference metric at the top row of the result table
+                # Show reference metric at the top row of the result table and generating the table
                 page_html += f"""
                 <h3>Most similar metrics (Compared to {ref_metric} from {start_year} to {end_year})</h3>
                 <p>Split into two periods: ({start_year}-{mid_year}) and ({mid_year + 1}-{end_year})</p>
