@@ -1,5 +1,5 @@
 import pyhtml
-
+    # Date sting to tuple
 def convert_dmy_to_tuple(dmy):
     try:
         day, month, year = map(int, dmy.split("/"))
@@ -9,13 +9,13 @@ def convert_dmy_to_tuple(dmy):
 
 def get_page_html(form_data):
     print("About to return page 3")
-
+    # Take value 
     ref_station = form_data.get('station')
     start_year = form_data.get('start_year')
     end_year = form_data.get('end_year')
     metric = form_data.get('metric')
     num_similar = form_data.get('num_similar')
-
+    
     if isinstance(ref_station, list): ref_station = ref_station[0]
     if isinstance(metric, list): metric = metric[0]
     if isinstance(num_similar, list): num_similar = num_similar[0]
@@ -33,7 +33,7 @@ def get_page_html(form_data):
             <label for="station">Select Reference Station:</label>
             <select name="station">
     """
-
+        # Take distinct location from AAT and AET
     station_query = """
         SELECT DISTINCT Location FROM (
             SELECT Location FROM AAT
@@ -45,7 +45,7 @@ def get_page_html(form_data):
     for (station,) in stations:
         selected = 'selected' if ref_station == station else ''
         page_html += f'<option value="{station}" {selected}>{station}</option>'
-
+    # min and max year input
     page_html += f"""
             </select><br><br>
             <label>Select Start Year:</label>
@@ -65,16 +65,16 @@ def get_page_html(form_data):
     """
 
     if ref_station and start_year and end_year and metric and num_similar:
-        try:
+        try:  #convert to integer and finding middle year for split
             start_year = int(start_year)
             end_year = int(end_year)
             mid_year = (start_year + end_year) // 2
-
+                # time range for 2 periods
             start1 = (start_year, 1, 1)
             end1 = (mid_year, 12, 31)
             start2 = (mid_year + 1, 1, 1)
             end2 = (end_year, 12, 31)
-
+                    # Use only data row where the metric is not null
             query = f"""
                 SELECT Location, DMY, {metric}
                 FROM AAT
@@ -105,15 +105,15 @@ def get_page_html(form_data):
             def avg(data, start, end):
                 vals = [v for d, v in data if start <= d <= end]
                 return sum(vals) / len(vals) if vals else None
-
+                # average of selected station 
             ref_data = station_data.get(ref_station, [])
             avg1 = avg(ref_data, start1, end1)
             avg2 = avg(ref_data, start2, end2)
-
+                # calculate percent change
             if avg1 is not None and avg2 is not None and avg1 != 0:
                 ref_change = (avg2 - avg1) / avg1 * 100.0
                 comparisons = []
-
+                    
                 for station, data in station_data.items():
                     if station == ref_station:
                         continue
@@ -123,7 +123,7 @@ def get_page_html(form_data):
                         change = (a2 - a1) / a1 * 100.0
                         diff = abs(change - ref_change)
                         comparisons.append((station, round(a1, 2), round(a2, 2), round(change, 2), round(diff, 2)))
-
+                    # sort to the user input similar station 
                 comparisons.sort(key=lambda x: x[4])
                 top_similar = comparisons[:int(num_similar)]
 
