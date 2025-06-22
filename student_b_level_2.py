@@ -1,5 +1,11 @@
 import pyhtml
 
+def convert_dmy_to_tuple(dmy):
+    try:
+        day, month, year = map(int, dmy.split("/"))
+        return year, month, day
+    except:
+        return None
 
 def get_page_html(form_data):
     print("About to return page 2")
@@ -9,12 +15,16 @@ def get_page_html(form_data):
     location_min = form_data.get('location_min')
     location_max = form_data.get('location_max')
     page = form_data.get('page', 1)
+    start_year = form_data.get('start_year')
+    end_year = form_data.get('end_year')
 
 
     if isinstance(location_min, list): location_min = location_min[0]
     if isinstance(location_max, list): location_max = location_max[0]
     if isinstance(selected_metric, list): selected_metric = selected_metric[0]
     if isinstance(page, list): page = page[0]
+    if isinstance(start_year, list): start_year = start_year[0]
+    if isinstance(end_year, list): end_year = end_year[0]
 
 
     try:
@@ -50,16 +60,21 @@ def get_page_html(form_data):
             <input type="text" name="location_min" value="{location_min or ''}"><br><br>
             <label for="location_max">Max Location ID:</label>
             <input type="text" name="location_max" value="{location_max or ''}"><br><br>
+            <label>Select start year (min =1970):</label>
+            <input type="number" name="start_year" value="{start_year or ''}" min="1970" max="2020"><br><br>
+            <label>Select end year (max = 2020):</label>
+            <input type="number" name="end_year" value="{end_year or ''}" min="1970" max="2020"><br><br>
             <input type="submit" value="Filter Locations">
         </form>
     """
 
-
-    if selected_metric and location_min and location_max:
+    if selected_metric and location_min and location_max and start_year and end_year:
         try:
             loc_min_val = float(location_min)
             loc_max_val = float(location_max)
             loc_min_val, loc_max_val = min(loc_min_val, loc_max_val), max(loc_min_val, loc_max_val)
+            start_year = int(start_year)
+            end_year = int(end_year)
 
 
             if selected_metric not in metric_columns:
@@ -70,12 +85,18 @@ def get_page_html(form_data):
             SELECT Location, DMY, {selected_metric}
             FROM States_combined
             WHERE CAST(Location AS REAL) BETWEEN {loc_min_val} AND {loc_max_val}
+            AND DMY IS NOT NULL
             ORDER BY CAST(Location AS REAL), DMY;
             """
 
 
             results = pyhtml.get_results_from_query("database/Stations_combined.db", query)
             filtered_results = [row for row in results if row[2] is not None and str(row[2]).strip() != '']
+
+            filtered_results = [
+            row for row in filtered_results
+            if convert_dmy_to_tuple(row[1]) and start_year <= convert_dmy_to_tuple(row[1])[0] <= end_year
+            ]
 
 
 #Creating tabs, showing filtered data from 40 unique cells for each tab
@@ -103,7 +124,7 @@ def get_page_html(form_data):
                 page_html += "<div style='margin-top:10px;'>"
 
 
-                base_url = f"/page2b?field={selected_metric}&location_min={loc_min_val}&location_max={loc_max_val}"
+                base_url = f"/page2b?field={selected_metric}&location_min={loc_min_val}&location_max={loc_max_val}&start_year={start_year}&end_year={end_year}"
 #Adding ordered tabs to organise the page
                 max_visible_pages = 10
                 start_page = max(1, page - max_visible_pages // 2)
@@ -149,6 +170,5 @@ def get_page_html(form_data):
     </body>
     </html>
     """
-
 
     return page_html
