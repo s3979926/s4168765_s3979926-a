@@ -1,92 +1,154 @@
 import pyhtml
+
+def convert_dmy_to_tuple(dmy):
+    try:
+        day, month, year = map(int, dmy.split("/"))
+        return year, month, day
+    except:
+        return None
+
 def get_page_html(form_data):
     print("About to return page 3")
-    #Create the top part of the webpage
-    #Note that the drop down list ('select' HTML element) has been given the name "var_star"
-    #We will use this same name in our code further below to obtain what the user selected.
-    page_html="""<!DOCTYPE html>
+
+    ref_station = form_data.get('station')
+    start_year = form_data.get('start_year')
+    end_year = form_data.get('end_year')
+    metric = form_data.get('metric')
+    num_similar = form_data.get('num_similar')
+
+    if isinstance(ref_station, list): ref_station = ref_station[0]
+    if isinstance(metric, list): metric = metric[0]
+    if isinstance(num_similar, list): num_similar = num_similar[0]
+    if isinstance(start_year, list): start_year = start_year[0]
+    if isinstance(end_year, list): end_year = end_year[0]
+
+    page_html = """<!DOCTYPE html>
     <html lang="en">
     <head>
-        <title>Page 3A - Forms, databases and advanced queries</title>
+        <title>Page 3A - Similar Weather Station Trends</title>
     </head>
     <body>
-        <h1>Welcome to Page 3a!</h1>
-        <p>List the movies based on the star</p>
+        <h1>Compare Climate Change Across Weather Stations</h1>
         <form action="/page3a" method="GET">
-        
-          <label for="var_star">Movie Star</label>
-          <select name="var_star" multiple>"""
-    #Before you read further, play around with the web-page and note how selecting a star name from the first
-    #drop down list populates the second drop down list with the movies in which they have featured.
-    
-    #Note that although we see the name of the movie star in the first drop down list, when a star is selected and submitted,
-    #our program receives the star's ID (primary key).
-    
-    ################################ Movie star drop down list is generated below ######################################
-          
+            <label for="station">Select Reference Station:</label>
+            <select name="station">
+    """
 
-    #Put the query together.
-    query = "select * from star;"
-    
-    #Run the query on the movies.db in the 'database' folder and get the results
-    #Note that all results are in the str data type first, even if they had different types in the database.
-    results = pyhtml.get_results_from_query("database/movies.db",query)
-    
-    #Get the value or values in the HTML dropdown list that we named "var_star" or None no data was sent through.
-    #If the user selects multiple movie stars on the web_page, we will have multiple values.
-    var_star = form_data.get('var_star')
-    
-    print("var_star selected on webpage is: ",var_star)
-    
-    #If the user had selected one or more stars on the web-page, convert their IDs to int
-    if(var_star!=None):
-        #Take the list of strings and convert the items to ints
-        var_star = [int(star) for star in var_star]
-    
-    #Create the drop down list of movie stars
-    for row in results:
-        #row[0] is the ID/primary key of the movie stars
-        page_html+='<option value="'+str(row[0])+'"'
-        #If there was a previous selection of a star on the web page, have them selected by default to be user-friendly.
-        if var_star!=None and row[0]==var_star[0]:
-            page_html+=' selected="selected"'
-            
-        #row[1] is the name of the star, which is what the user sees in the drop down list.
-        page_html+='>'+str(row[1])+'</option>'
-        
-    page_html+="</select><br><br>"
+    station_query = """
+        SELECT DISTINCT Location FROM (
+            SELECT Location FROM AAT
+            UNION
+            SELECT Location FROM AET
+        ) ORDER BY Location;
+    """
+    stations = pyhtml.get_results_from_query("database/BOM2.db", station_query)
+    for (station,) in stations:
+        selected = 'selected' if ref_station == station else ''
+        page_html += f'<option value="{station}" {selected}>{station}</option>'
 
+    page_html += f"""
+            </select><br><br>
+            <label>Select Start Year:</label>
+            <input type="number" name="start_year" value="{start_year or ''}" min="1970" max="2020"><br><br>
+            <label>Select End Year:</label>
+            <input type="number" name="end_year" value="{end_year or ''}" min="1970" max="2020"><br><br>
+            <label for="metric">Select Metric:</label>
+            <select name="metric">
+                <option value="MaxTemp">MaxTemp</option>
+                <option value="MinTemp">MinTemp</option>
+                <option value="Precipitation">Precipitation</option>
+            </select><br><br>
+            <label for="num_similar">Number of Similar Stations to Find:</label>
+            <input type="number" name="num_similar" value="{num_similar or '2'}"><br><br>
+            <input type="submit" value="Find Similar Stations">
+        </form>
+    """
 
+    if ref_station and start_year and end_year and metric and num_similar:
+        try:
+            start_year = int(start_year)
+            end_year = int(end_year)
+            mid_year = (start_year + end_year) // 2
 
-    ################################ Movies drop down list is generated below ##########################################
-    
-    page_html+="""<label for="var_movie">Movie</label>
-    <select name="var_movie" """
+            start1 = (start_year, 1, 1)
+            end1 = (mid_year, 12, 31)
+            start2 = (mid_year + 1, 1, 1)
+            end2 = (end_year, 12, 31)
 
-    #We create this drop down list only if a movie star was chosen
-    if var_star!=None:
-        #Query for getting the list of movie IDs and their titles by star
-        query ="""SELECT movie.mvnumb, movie.mvtitle 
-        FROM movie 
-        JOIN movstar ON movie.mvnumb = movstar.mvnumb """
-        query+=f"WHERE movstar.starnumb = {var_star[0]};"
+            query = f"""
+                SELECT Location, DMY, {metric}
+                FROM AAT
+                WHERE {metric} IS NOT NULL
+                UNION ALL
+                SELECT Location, DMY, {metric}
+                FROM AET
+                WHERE {metric} IS NOT NULL
+            """
+            data = pyhtml.get_results_from_query("database/BOM2.db", query)
 
-        #Run query and get results
-        results = pyhtml.get_results_from_query("database/movies.db",query)
-        page_html+=" >"
-        #row[0] is the movie ID (primary key) and row[1] is the movie title
-        for row in results:
-            page_html+='<option value="'+str(row[0])+'"\>'+str(row[1])+'</option>'
-    else:
-        #If no movie star was chosen, we create a dummy list and make it disabled so the user sees the movie drop down
-        #but they can't access it.
-        page_html+="disabled>"
-        page_html+='<option>Choose a star</option>'
-    page_html+="</select><br><br>"
+            records = []
+            for loc, dmy, val in data:
+                date = convert_dmy_to_tuple(dmy)
+                if date:
+                    try:
+                        val = float(val)
+                        records.append((loc, date, val))
+                    except:
+                        continue
 
-    page_html+="""
-    <input type="submit" value="Show starred movies">
-    </form>
+            station_data = {}
+            for loc, date, val in records:
+                if loc not in station_data:
+                    station_data[loc] = []
+                station_data[loc].append((date, val))
+
+            def avg(data, start, end):
+                vals = [v for d, v in data if start <= d <= end]
+                return sum(vals) / len(vals) if vals else None
+
+            ref_data = station_data.get(ref_station, [])
+            avg1 = avg(ref_data, start1, end1)
+            avg2 = avg(ref_data, start2, end2)
+
+            if avg1 is not None and avg2 is not None and avg1 != 0:
+                ref_change = (avg2 - avg1) / avg1 * 100.0
+                comparisons = []
+
+                for station, data in station_data.items():
+                    if station == ref_station:
+                        continue
+                    a1 = avg(data, start1, end1)
+                    a2 = avg(data, start2, end2)
+                    if a1 is not None and a2 is not None and a1 != 0:
+                        change = (a2 - a1) / a1 * 100.0
+                        diff = abs(change - ref_change)
+                        comparisons.append((station, round(a1, 2), round(a2, 2), round(change, 2), round(diff, 2)))
+
+                comparisons.sort(key=lambda x: x[4])
+                top_similar = comparisons[:int(num_similar)]
+
+                page_html += f"""
+                <h3>Most Similar Weather Stations (Compared to site {ref_station} from {start_year} to {end_year}, in form of {metric})</h3>
+                <p>Split into two periods: ({start_year}-{mid_year}) and ({mid_year + 1}-{end_year})</p>
+                <table border="1" style="border-collapse: collapse;">
+                    <tr>
+                        <th>Station</th>
+                        <th>Avg in Period 1</th>
+                        <th>Avg in Period 2</th>
+                        <th>% Change</th>
+                        <th>Difference from Reference</th>
+                    </tr>
+                """
+                for row in top_similar:
+                    page_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+                page_html += "</table>"
+            else:
+                page_html += "<p style='color:red;'>Reference station does not have valid data in both periods.</p>"
+
+        except Exception as e:
+            page_html += f"<p style='color:red;'>Error occurred: {str(e)}</p>"
+
+    page_html += """
         <p><a href="/">Go to Page 1A</a></p>
         <p><a href="/page2a">Go to Page 2A</a></p>
         <p><a href="/page3a">Go to Page 3A</a></p>
@@ -96,4 +158,5 @@ def get_page_html(form_data):
     </body>
     </html>
     """
+
     return page_html

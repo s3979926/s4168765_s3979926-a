@@ -15,7 +15,7 @@ def get_page_html(form_data):
         selected_state = selected_state[0]
 
     page_html = f"""<!DOCTYPE html>
-    <html lang=\"en\">
+    <html lang="en">
     <head>
         <title>Filtered Locations</title>
     </head>
@@ -64,26 +64,32 @@ def get_page_html(form_data):
 
             page_html += f"""
             <h3>Results for {selected_state} between latitudes {lat_min_val} and {lat_max_val}</h3>
-            <table border="1" style="border-collapse: collapse;">
-                <tr><th>Site</th><th>Name</th><th>Region</th><th>Latitude</th></tr>
             """
-            for row in results:
-                site, name, region, lat = row
-                page_html += f"<tr><td>{site}</td><td>{name}</td><td>{region}</td><td>{lat}</td></tr>"
 
-            page_html += "</table>"
+            if results:
+                page_html += """
+                <table border="1" style="border-collapse: collapse;">
+                    <tr><th>Site</th><th>Name</th><th>Region</th><th>Latitude</th></tr>
+                """
+                for row in results:
+                    site, name, region, lat = row
+                    page_html += f"<tr><td>{site}</td><td>{name}</td><td>{region}</td><td>{lat}</td></tr>"
+                page_html += "</table>"
+            else:
+                page_html += "<p style='color:red; text-align:center;'>No site between this latitude range for the selected state.</p>"
+
         except ValueError:
-            page_html += "<p style='color:red;'>Please enter valid numeric latitude values.</p>"
+            page_html += "<p style='color:red;'>Please enter valid latitude values.</p>"
 
     page_html += """
         <p><a href="/">Go to Page 1A</a></p>
         <p><a href="/page2a">Go to Page 2A</a></p>
         <p><a href="/page3a">Go to Page 3A</a></p>
-        <p><a href="/page1b">Go to Page 1B</a></p>
+        <p><a href="/page1b">Go to Page 1B</a></p>      
         <p><a href="/page2b">Go to Page 2B</a></p>
         <p><a href="/page3b">Go to Page 3B</a></p>
-        <p style="text-align: center;">Data covered our website</p>
-        <img src="images/data snapshot.png" style="width: 30%; height: auto; display: block; margin: 0 auto;">
+        
+        
     </body>
     </html>
     """
